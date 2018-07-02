@@ -1,7 +1,7 @@
 ---
 title: "All GDQs"
 author: "Lukas"
-date: "`r format(Sys.time(), '%F %Z')`"
+date: "`r format(Sys.time(), '%F %T %Z')`"
 output: html_document
 ---
 
@@ -43,7 +43,7 @@ gdq_total %>%
                                          labels = euro_scale)) +
   scale_fill_brewer(palette = "Set1", direction = -1) +
   labs(title = p_title, caption = p_caption,
-       subtitle = "Donation totals by event",
+       subtitle = "Cumulative donation totals",
        x = "Year", y = "Amount", fill = "Event")
 ```
 
