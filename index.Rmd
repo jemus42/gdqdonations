@@ -1,6 +1,5 @@
 ---
 title: "All GDQs"
-author: "Lukas"
 date: "`r format(Sys.time(), '%F %T %Z')`"
 output: html_document
 ---
@@ -16,7 +15,10 @@ gdq_total <- gdq %>%
   ungroup()
 ```
 
-So this is fun.
+Since I discovered that the [GDQ donations are public, tabular und scrapeable](https://gamesdonequick.com/tracker/donations/), I couldn't resist cobbling together a script to scrape all the data. It only took around 2 hours to finish. Anway, this site collects the results.
+
+First up we look at the donation totals for each event.  
+Note that as of now I only collected data from [AS]GDQs since 2011, the other events are not included (yet?).
 
 ```{r gdq_bars_by_event}
 ggplot(gdq_total, aes(x = year, y = amount, fill = gdq)) +
@@ -30,7 +32,7 @@ ggplot(gdq_total, aes(x = year, y = amount, fill = gdq)) +
        x = "Year", y = "Amount", fill = "Event")
 ```
 
-Or cumulative.
+Or cumulative, to see how much money GDQ has raised since 2011 (as I said, only the main events are counted, the actual total is even higher).
 
 ```{r gdq_bars_cumulative_by_event}
 gdq_total %>%
