@@ -6,13 +6,53 @@ output: html_document
 
 ```{r setup, include=FALSE}
 source("helpers.R")
+opts_chunk$set(fig.path = "plots/sgdq2018_")
 
 gdq_start <- ymd_hms("2018-06-24 00:00:00")
 gdq_end   <- ymd_hms("2018-07-02 00:00:00")
 
 sgdq <- readRDS("data/sgdq2018.rds") %>%
-  filter(between(time, gdq_start, gdq_end) %>%
+  filter(between(time, gdq_start, gdq_end)) %>%
   arrange(time) %>%
   mutate(day_num = fct_inorder(as.character(day_num), ordered = TRUE))
+```
+
+Donation timeline:
+
+```{r timeline}
+sgdq %>%
+  ggplot(data = ., aes(x = time, y = cumsum(amount))) +
+  geom_line(size = 2) +
+  scale_x_datetime(date_breaks = "1 day",
+                   date_labels = "%a (%d.)",
+                   date_minor_breaks = "6 hours") +
+  scale_y_continuous(breaks = seq(0, 3e6, 25e4),
+                     minor_breaks = seq(0, 3e6, 1e5),
+                     labels = scales::dollar,
+                     sec.axis = sec_axis(~.*0.85,
+                                         labels = scales::unit_format("€", sep = ""),
+                                         breaks = seq(0, 3e6, 25e4))) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Cumulative donations over the course of the event, all times in UTC.",
+       x = "Time", y = "Amount Total")
+```
+
+Donation breakdown:
+
+```{r donation_bysize}
+sgdq %>%
+  filter(name != "Twitch Subscriber Revenue") %>%
+  group_by(amount_c) %>%
+  summarize(n = n(),
+            total = sum(amount)) %>%
+  mutate(label = paste0("n = ", n, " – total: ", scales::dollar(total))) %>%
+  ggplot(aes(x = amount_c, y = n)) +
+  geom_col() +
+  coord_flip() +
+  geom_label(aes(label = label), hjust = 0, nudge_y = 100) +
+  expand_limits(y = 15e3) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Donation amounts by bin, each bin excludes the previous lower bin.\nExcluding donations labelled 'Twitch Subscriber Revenue'",
+       x = "Donation Amount", y = "# of Donations")
 ```
 
