@@ -7,6 +7,8 @@ output: html_document
 ```{r setup, include=FALSE}
 source("helpers.R")
 
+runs <- readRDS("data/runs.rds")
+
 gdq <- assemble_gdqs()
 
 gdq_total <- gdq %>%
@@ -16,6 +18,8 @@ gdq_total <- gdq %>%
 ```
 
 Since I discovered that the [GDQ donations are public, tabular und scrapeable](https://gamesdonequick.com/tracker/donations/), I couldn't resist cobbling together a script to scrape all the data. It only took around 2 hours to finish. Anway, this site collects the results.
+
+# Donations 
 
 First up we look at the donation totals for each event.  
 Note that as of now I only collected data from [AS]GDQs since 2011, the other events are not included (yet?).
@@ -47,5 +51,22 @@ gdq_total %>%
   labs(title = p_title, caption = p_caption,
        subtitle = "Cumulative donation totals",
        x = "Year", y = "Amount", fill = "Event")
+```
+
+
+# Runs
+
+```{r}
+runs %>%
+  filter(run_duration_s > 0) %>%
+  {
+    ggplot(data = ., aes(x = run_duration_hms)) +
+      geom_histogram(binwidth = 1/6 * 60^2) +
+      geom_vline(xintercept = mean(.$run_duration_s), color = "red", lty = "dashed") +
+      scale_x_time(breaks = seq(0, 8 * 60^2, 1 * 60^2)) +
+      labs(title = "Games Done Quick: Runs", caption = p_caption,
+           subtitle = "Run duration histogram",
+           x = "Run Duration (H:M:S)", y = "Frequency") 
+  }
 ```
 

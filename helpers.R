@@ -92,7 +92,10 @@ theme_set(theme_tadaa(legend.position = "top"))
 euro_scale <- unit_format("€", sep = "")
 
 p_title <- "Games Done Quick: Donation Breakdown"
-p_caption <- "@jemus42\nAll data from gamesdonequick.com/tracker"
+p_caption <- "gdq.tadaa-data.de\nAll data from gamesdonequick.com/tracker"
+
+amount_breaks   <- sort(c(0, as.numeric(flatten(map(c(5, 10, 25), ~.x * 10^{0:4})))))
+amount_c_labels <- paste0("<= ", scales::dollar(amount_breaks[-1]))
 
 ## Chunk options
 knitr::opts_chunk$set(cache.path = "cache",
