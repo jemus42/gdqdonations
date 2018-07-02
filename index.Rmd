@@ -1,0 +1,49 @@
+---
+title: "index"
+author: "Lukas"
+date: "`r format(Sys.time(), '%F %Z')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+source("helpers.R")
+
+gdq <- assemble_gdqs()
+
+gdq_total <- gdq %>%
+  group_by(year, gdq) %>%
+  summarize(amount = sum(amount)) %>%
+  ungroup()
+```
+
+So this is fun.
+
+```{r gdq_bars_by_event}
+ggplot(gdq_total, aes(x = year, y = amount, fill = gdq)) +
+  geom_col(position = "dodge", alpha = .75) +
+  scale_y_continuous(labels = dollar, 
+                     sec.axis = sec_axis(~.*.85, 
+                                         labels = euro_scale)) +
+  scale_fill_brewer(palette = "Set1", direction = -1) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Donation totals by event",
+       x = "Year", y = "Amount", fill = "Event")
+```
+
+Or cumulative.
+
+```{r}
+gdq_total %>%
+  arrange(year) %>%
+  mutate(amount = cumsum(amount)) %>%
+  ggplot(aes(x = year, y = amount, fill = gdq)) +
+  geom_col(alpha = .75) +
+  scale_y_continuous(labels = dollar, 
+                     sec.axis = sec_axis(~.*.85, 
+                                         labels = euro_scale)) +
+  scale_fill_brewer(palette = "Set1", direction = -1) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Donation totals by event",
+       x = "Year", y = "Amount", fill = "Event")
+```
+

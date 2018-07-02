@@ -1,0 +1,31 @@
+name: GDQ Data
+output_dir: '.'
+navbar:
+  title: GDQ Tracker Tracker
+  left:
+  - text: Home
+    icon: fa-home
+    href: index.html
+  right:
+  - text: R-Intro
+    icon: fa-code
+    href: https://r-intro.tadaa-data.de/book/
+  - text: ''
+    icon: fa-github
+    href: https://github.com/jemus42/qm.jemu.name
+output:
+  html_document:
+    toc: yes
+    toc_float: yes
+    toc_depth: 4
+    highlight: kate
+    fig_width: 9
+    fig_retina: 2
+    theme: flatly
+    code_folding: hide
+    df_print: paged
+    number_sections: no
+    lib_dir: site_libs
+    self_contained: no
+pandoc_args: --tab-stop=2
+
