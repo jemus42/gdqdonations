@@ -66,7 +66,7 @@ assemble_gdqs <- function(events = NULL) {
   if (is.null(events)) {
     # events <- rev(paste0(c("a", "s"), rep(paste0("gdq", 2011:2018), each = 2)))
     # events <- paste0("data/", events, ".rds")
-    events <- list.files("data", ".rds", full.names = TRUE)
+    events <- list.files("data", "[as]gdq\\d+\\.rds", full.names = TRUE)
   }
 
   map_df(events, function(x) {
