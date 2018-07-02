@@ -1,0 +1,18 @@
+---
+title: "SGDQ 2018"
+date: "`r format(Sys.time(), '%F %T %Z')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+source("helpers.R")
+
+gdq_start <- ymd_hms("2018-06-24 00:00:00")
+gdq_end   <- ymd_hms("2018-07-02 00:00:00")
+
+sgdq <- readRDS("data/sgdq2018.rds") %>%
+  filter(between(time, gdq_start, gdq_end) %>%
+  arrange(time) %>%
+  mutate(day_num = fct_inorder(as.character(day_num), ordered = TRUE))
+```
+

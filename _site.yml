@@ -7,6 +7,9 @@ navbar:
   - text: All Events
     icon: fa-home
     href: index.html
+  - text: SGDQ 2018
+    icon: fa-gamepad
+    href: sgdq2018.html
   right:
   - text: ''
     icon: fa-twitter
