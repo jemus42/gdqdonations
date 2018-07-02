@@ -4,7 +4,7 @@ exclude: ["README.md"]
 navbar:
   title: GDQ Tracker Tracker
   left:
-  - text: Home
+  - text: All Events
     icon: fa-home
     href: index.html
   right:
@@ -20,6 +20,7 @@ output:
     toc_float: yes
     toc_depth: 4
     highlight: kate
+    fig_height: 6
     fig_width: 9
     fig_retina: 2
     theme: flatly
@@ -28,5 +29,8 @@ output:
     number_sections: no
     lib_dir: site_libs
     self_contained: no
+    include:
+      in_header: "html_includes/piwik.html"
+      after_body: "html_includes/footer.html"
 pandoc_args: --tab-stop=2
 

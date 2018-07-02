@@ -1,5 +1,5 @@
 ---
-title: "index"
+title: "All GDQs"
 author: "Lukas"
 date: "`r format(Sys.time(), '%F %Z')`"
 output: html_document
