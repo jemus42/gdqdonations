@@ -32,7 +32,7 @@ ggplot(gdq_total, aes(x = year, y = amount, fill = gdq)) +
 
 Or cumulative.
 
-```{r}
+```{r gdq_bars_cumulative_by_event}
 gdq_total %>%
   arrange(year) %>%
   mutate(amount = cumsum(amount)) %>%

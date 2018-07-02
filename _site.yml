@@ -1,5 +1,6 @@
 name: GDQ Data
-output_dir: '.'
+output_dir: "_site"
+exclude: ["README.md"]
 navbar:
   title: GDQ Tracker Tracker
   left:
@@ -7,12 +8,12 @@ navbar:
     icon: fa-home
     href: index.html
   right:
-  - text: R-Intro
-    icon: fa-code
-    href: https://r-intro.tadaa-data.de/book/
+  - text: ''
+    icon: fa-twitter
+    href: https://twitter.com/jemus42
   - text: ''
     icon: fa-github
-    href: https://github.com/jemus42/qm.jemu.name
+    href: https://github.com/jemus42/gdqdonations
 output:
   html_document:
     toc: yes
