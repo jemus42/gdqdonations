@@ -12,6 +12,9 @@ navbar:
     href: sgdq2018.html
   right:
   - text: ''
+    icon: fa-code
+    href: session.html
+  - text: ''
     icon: fa-twitter
     href: https://twitter.com/jemus42
   - text: ''

@@ -1,0 +1,12 @@
+---
+title: "Session Info"
+date: "`r format(Sys.time(), '%F %T %Z')`"
+output: html_document
+---
+
+```{r}
+source("helpers.R")
+
+devtools::session_info()
+```
+
