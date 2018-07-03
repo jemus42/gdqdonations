@@ -57,6 +57,8 @@ sgdq %>%
        x = "Donation Amount", y = "# of Donations")
 ```
 
+## Donations per Day
+
 Donation total by day, excluding the Twitch subscription revenue as well, as it would skew the amounts on the first and last day respectively.
 
 ```{r donations_total_by_day}
@@ -76,5 +78,21 @@ sgdq %>%
   labs(title = p_title, caption = p_caption,
        subtitle = "Donation totals by day, excluding the Twitch subscribtion revenue.",
        x = "", y = "Donation Total")
+```
+
+Individual donations by day both as points and a boxplot.
+
+```{r donations_boxpoints_by_day}
+sgdq %>%
+  filter(name != "Twitch Subscriber Revenue") %>%
+  ggplot(aes(day_num, amount, color = day)) +
+  geom_quasirandom() +
+  geom_boxplot(alpha = .75) +
+  scale_y_log10(breaks = amount_breaks, labels = scales::dollar,
+                sec.axis = euro_axis) +
+  scale_color_brewer(palette = "Dark2", guide = F) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Donations by day, excluding the Twitch subscribtion revenue.",
+       x = "Event Day", y = "Amount")
 ```
 
