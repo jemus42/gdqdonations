@@ -6,11 +6,19 @@ editor_options:
   chunk_output_type: console
 ---
 
-```{r}
+```{r session_info}
 source("helpers.R")
+library(tibble)
 
 sess <- devtools::session_info()
 
-sess$platform %>% unclass %>% as.data.frame %>% kable
-sess$packages %>% unclass %>% as.data.frame %>% kable
+sess$platform %>% unclass %>% 
+  as_tibble %>% t %>% as.data.frame %>% 
+  rownames_to_column %>% as_tibble %>%
+  set_names(c("Key", "Value")) %>%
+  kable
+
+sess$packages %>% unclass %>% as.data.frame %>% 
+  set_names(c("Package", "Loaded", "Version", "Date", "Source")) %>%
+  kable
 ```
