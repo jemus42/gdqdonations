@@ -66,7 +66,7 @@ assemble_gdqs <- function(events = NULL) {
   if (is.null(events)) {
     # events <- rev(paste0(c("a", "s"), rep(paste0("gdq", 2011:2018), each = 2)))
     # events <- paste0("data/", events, ".rds")
-    events <- list.files("data", "[as]gdq\\d+\\.rds", full.names = TRUE)
+    events <- list.files("data", "^[as]gdq\\d+\\.rds", full.names = TRUE)
   }
 
   map_df(events, function(x) {
@@ -81,7 +81,41 @@ assemble_gdqs <- function(events = NULL) {
     mutate(day_num = forcats::fct_inorder(day_num, ordered = TRUE))
 }
 
-# For documents
+# Getting runs ----
+
+get_runs <- function(event) {
+
+  runs <- read_html(paste0("https://gamesdonequick.com/tracker/runs/", event)) %>%
+    html_table() %>%
+    extract2(1) %>%
+    set_names(c("run", "players", "description", "run_start", "run_end", "bidwars")) %>%
+    mutate(run_start = mdy_hms(run_start),
+           run_end = mdy_hms(run_end),
+           run_duration_s = as.numeric(difftime(run_end, run_start, units = "secs")),
+           run_duration_hms = hms::hms(seconds = run_duration_s)) %>%
+    arrange(run_start) %>%
+    filter(!(run %in% c("Bonus Stream", "Preshow")))
+
+  runs$event <- str_to_upper(str_extract(event, "[as]gdq\\d+"))
+  runs$year  <- str_extract(event, "\\d+")
+  runs$gdq   <- str_remove(runs$event, "\\d+")
+
+  runs
+}
+
+assemble_runs <- function(events = NULL) {
+
+  if (is.null(events)) {
+    events <- list.files("data", "runs_[as]gdq\\d+\\.rds", full.names = TRUE)
+  }
+
+  map_df(events, function(x) {
+    readRDS(x)
+  }) %>%
+    arrange(run_start)
+}
+
+# For documents ----
 library(ggplot2)
 library(scales)
 library(tadaatoolbox)

@@ -19,14 +19,19 @@ for (event in events) {
 
 # Runs ----
 
-read_html("https://gamesdonequick.com/tracker/runs/") %>%
-  html_table() %>%
-  extract2(1) %>%
-  set_names(c("run", "players", "description", "run_start", "run_end", "bidwars")) %>%
-  mutate(run_start = mdy_hms(run_start),
-         run_end = mdy_hms(run_end),
-         run_duration_s = as.numeric(difftime(run_end, run_start, units = "secs")),
-         run_duration_hms = hms::hms(seconds = run_duration_s)) %>%
-  arrange(run_start) %>%
-  filter(!(run %in% c("Bonus Stream", "Preshow"))) %>%
-  saveRDS("data/runs.rds")
+for (event in events) {
+
+  path <- paste0("data/runs_", event, ".rds")
+
+  if (file.exists(path)) {
+    cat("Skipping ", event)
+    next
+  }
+
+  print(event)
+  get_runs(event = event) %>%
+  saveRDS(path)
+
+  beepr::beep()
+}
+
