@@ -7,6 +7,7 @@ output: html_document
 ```{r setup, include=FALSE}
 source("helpers.R")
 opts_chunk$set(fig.path = "plots/sgdq2018_")
+p_title <- "Summer Games Done Quick 2018: Donation Breakdown"
 
 gdq_start <- ymd_hms("2018-06-24 00:00:00")
 gdq_end   <- ymd_hms("2018-07-02 00:00:00")
@@ -30,7 +31,7 @@ sgdq %>%
                      minor_breaks = seq(0, 3e6, 1e5),
                      labels = scales::dollar,
                      sec.axis = sec_axis(~.*0.85,
-                                         labels = scales::unit_format("€", sep = ""),
+                                         labels = euro_scale,
                                          breaks = seq(0, 3e6, 25e4))) +
   labs(title = p_title, caption = p_caption,
        subtitle = "Cumulative donations over the course of the event, all times in UTC.",
@@ -54,5 +55,26 @@ sgdq %>%
   labs(title = p_title, caption = p_caption,
        subtitle = "Donation amounts by bin, each bin excludes the previous lower bin.\nExcluding donations labelled 'Twitch Subscriber Revenue'",
        x = "Donation Amount", y = "# of Donations")
+```
+
+Donation total by day, excluding the Twitch subscription revenue as well, as it would skew the amounts on the first and last day respectively.
+
+```{r donations_total_by_day}
+sgdq %>%
+  filter(name != "Twitch Subscriber Revenue") %>%
+  group_by(day_num) %>%
+  summarize(n = n(), total = sum(amount)) %>%
+  ggplot(aes(x = day_num, y = total, fill = day_num)) +
+  geom_col(color = "black", alpha = .75) +
+  scale_y_continuous(breaks = seq(0, 1e6, 1e5),
+                     minor_breaks = seq(0, 1e6, 2.5e4),
+                     labels = scales::dollar,
+                     sec.axis = sec_axis(~.*0.85,
+                                         labels = euro_scale,
+                                         breaks = derive())) +
+  scale_fill_brewer(palette = "Dark2", guide = F) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Donation totals by day, excluding the Twitch subscribtion revenue.",
+       x = "", y = "Donation Total")
 ```
 

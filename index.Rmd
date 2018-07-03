@@ -53,6 +53,27 @@ gdq_total %>%
        x = "Year", y = "Amount", fill = "Event")
 ```
 
+```{r gdq_boxplot_by_event}
+gdq %>%
+  mutate(year = factor(year(time))) %>%
+  filter(name != "Twitch Subscriber Revenue",
+         name != "Humble Bundle",
+         name != "The Yetee",
+         name != "Twitch HQ",
+         name != "Fangamer",
+         name != "D..., Games (GamesDoneQuick)") %>%
+  ggplot(aes(x = year, y = amount, fill = gdq)) +
+  geom_boxplot() +
+  scale_y_log10(labels = dollar,
+                     sec.axis = dup_axis(~ . * .85,
+                                         labels = euro_scale, 
+                                         breaks = derive())) +
+  scale_fill_brewer(palette = "Set1", direction = -1) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Donations by event, sponsor donations have been removed.",
+       x = "Year", y = "Amount", fill = "Event")
+```
+
 
 # Runs
 
