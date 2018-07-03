@@ -128,6 +128,8 @@ euro_scale <- unit_format("€", sep = "")
 euro_axis <- function(...) dup_axis(~.*.85, labels = euro_scale, name = NULL, ...)
 
 p_title <- "Games Done Quick: Donation Breakdown"
+p_title_r <- "Games Done Quick: Runs"
+
 p_caption <- "gdq.tadaa-data.de\nAll data from gamesdonequick.com/tracker"
 
 amount_breaks   <- sort(c(0, as.numeric(flatten(map(c(5, 10, 25), ~.x * 10^{0:4})))))
