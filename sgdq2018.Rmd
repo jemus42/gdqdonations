@@ -89,10 +89,46 @@ sgdq %>%
   geom_quasirandom() +
   geom_boxplot(alpha = .75) +
   scale_y_log10(breaks = amount_breaks, labels = scales::dollar,
-                sec.axis = euro_axis) +
+                sec.axis = euro_axis()) +
   scale_color_brewer(palette = "Dark2", guide = F) +
   labs(title = p_title, caption = p_caption,
        subtitle = "Donations by day, excluding the Twitch subscribtion revenue.",
-       x = "Event Day", y = "Amount")
+       x = "Event Day", y = "Amount (log10)")
+```
+
+The grouping by day is mostly done because a plain, all-week scatterplot looks like this:
+
+```{r donations_points_by_day}
+sgdq %>%
+  ggplot(aes(time, amount, color = day)) +
+  geom_point(alpha = .5) +
+  scale_x_datetime(date_breaks = "1 day", date_labels = "%b %d",
+                   date_minor_breaks = "6 hours") +
+  scale_y_log10(breaks = amount_breaks, labels = scales::dollar,
+                sec.axis = euro_axis())) +
+  scale_color_brewer(palette = "Dark2", guide = F) +
+  labs(title = p_title, caption = p_caption,
+       x = "Time", y = "Amount (log10)")
+```
+
+However, looking at means and 95% confidence intervals, we get this:
+
+```{r donations_meanci_by_day}
+sgdq %>%
+  filter(name != "Twitch Subscriber Revenue") %>%
+  ggplot(aes(x = day_num, y = amount, color = day_num, fill = day_num)) +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", 
+               size = 1.5, width = .5) +
+  stat_summary(fun.y = mean, geom = "point", shape = 21, color = "black",
+               size = 2.5) +
+  scale_y_continuous(breaks = pretty_breaks(), 
+                     labels = dollar, 
+                     sec.axis = euro_axis(breaks = pretty_breaks())) +
+  scale_color_brewer(palette = "Dark2", guide = F) +
+  scale_fill_brewer(palette = "Dark2", guide = F) +
+  labs(title = p_title, caption = p_caption,
+       subtitle = "Average donation amount per day with 95% normal confidence interval.\nTwitch subscription revenue not included.",
+       x = "Day", y = "Amount (mean & 96% CI)")
+
 ```
 

@@ -91,7 +91,7 @@ theme_set(theme_tadaa(legend.position = "top"))
 
 ## Plot parts
 euro_scale <- unit_format("€", sep = "")
-euro_axis <- dup_axis(~.*.85, labels = euro_scale)
+euro_axis <- function(...) dup_axis(~.*.85, labels = euro_scale, name = NULL, ...)
 
 p_title <- "Games Done Quick: Donation Breakdown"
 p_caption <- "gdq.tadaa-data.de\nAll data from gamesdonequick.com/tracker"
