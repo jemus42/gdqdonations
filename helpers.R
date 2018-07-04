@@ -118,10 +118,10 @@ assemble_runs <- function(events = NULL) {
 # For documents ----
 library(ggplot2)
 library(scales)
-library(tadaatoolbox)
+library(hrbrthemes)
 library(knitr)
 library(ggbeeswarm)
-theme_set(theme_tadaa(legend.position = "top"))
+theme_set(theme_ipsum() + theme(legend.position = "top"))
 
 ## Plot parts
 euro_scale <- unit_format("€", sep = "")

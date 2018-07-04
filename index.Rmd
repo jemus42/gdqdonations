@@ -76,6 +76,8 @@ gdq %>%
 
 # Runs
 
+Run duration histogram.
+
 ```{r runs_histogram}
 runs %>%
   filter(run_duration_s > 0) %>%
@@ -110,5 +112,28 @@ runs %>%
                             hms::as.hms(round(mean(runs$run_duration_hms)))),
              x = "Year", y = "Run Duration (H:M:S)", fill = "Event")
   }
+```
+
+## Runs and Bid Wars
+
+What's the likelihood that a run is associated with a bid war, given the run's duration?
+
+```{r runs_by_duration_bidwar_logreg}
+runs %>%
+  filter(run_duration_s > 0) %>%
+  mutate(bidwars = if_else(bidwars == "Yes", 1, 0)) %>%
+  glm(bidwars ~ run_duration_s, data = ., family = binomial) %>%
+  effects::allEffects() %>%
+  unclass() %>%
+  as.data.frame() %>%
+  as_tibble() %>%
+  mutate(duration = hms::hms(seconds = run_duration_s.run_duration_s)) %>%
+  ggplot(aes(x = duration, y = run_duration_s.fit)) +
+  geom_line() +
+  scale_x_time() +
+  scale_y_continuous(labels = percent, limits = c(0, 1)) +
+  labs(title = p_title_r, caption = p_caption,
+       subtitle = "Estimated likelihood for a run to be associated with a bid war, by duration",
+       x = "Run Duration (H:M:S)", y = "Likelihood")
 ```
 
