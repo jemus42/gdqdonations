@@ -20,5 +20,7 @@ sess$platform %>% unclass %>%
 
 sess$packages %>% unclass %>% as.data.frame %>% 
   set_names(c("Package", "Loaded", "Version", "Date", "Source")) %>%
+  filter(Loaded == "*", !(Package %in% c("base", getOption("defaultPackages")))) %>% 
+  select(-Loaded) %>%
   kable
 ```
