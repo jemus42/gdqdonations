@@ -1,13 +1,13 @@
 # Helper functions that do the heavy lifting
 library(purrr)
 library(dplyr)
-library(rvest)
 library(magrittr)
 library(lubridate)
 library(stringr)
 library(forcats)
 
 get_page_count <- function(event = "sgdq2018") {
+  require(rvest)
   cat("\n", event, ": Index\n", sep = "")
   url_base <- "https://gamesdonequick.com/tracker/donations/"
   url <- paste0(url_base, event)
@@ -20,6 +20,7 @@ get_page_count <- function(event = "sgdq2018") {
 }
 
 get_page <- function(event = "sgdq2018", page = 1) {
+  require(rvest)
   cat("\n", event, ": ", page, "\n", sep = "")
   url_base <- "https://gamesdonequick.com/tracker/donations/"
   url <- paste0(url_base, event, "?page=", page)
@@ -84,6 +85,7 @@ assemble_gdqs <- function(events = NULL) {
 # Getting runs ----
 
 get_runs <- function(event) {
+  require(rvest)
 
   runs <- read_html(paste0("https://gamesdonequick.com/tracker/runs/", event)) %>%
     html_table() %>%
@@ -121,6 +123,7 @@ library(scales)
 library(hrbrthemes)
 library(knitr)
 library(ggbeeswarm)
+library(effects)
 theme_set(theme_ipsum() + theme(legend.position = "top"))
 
 ## Plot parts
