@@ -117,6 +117,34 @@ assemble_runs <- function(events = NULL) {
     arrange(run_start)
 }
 
+# Proper event dates ----
+# https://en.wikipedia.org/wiki/Games_Done_Quick#List_of_marathons
+event_dates <- tribble(
+  ~event,     ~start,            ~end,
+  "AGDQ2011", ymd("2011-01-06"), ymd("2011-01-11"),
+  "AGDQ2012", ymd("2012-01-04"), ymd("2012-01-09"),
+  "AGDQ2013", ymd("2013-01-06"), ymd("2013-01-12"),
+  "AGDQ2014", ymd("2014-01-05"), ymd("2014-01-11"),
+  "AGDQ2015", ymd("2015-01-04"), ymd("2015-01-10"),
+  "AGDQ2016", ymd("2016-01-03"), ymd("2016-01-10"),
+  "AGDQ2017", ymd("2017-01-08"), ymd("2017-01-15"),
+  "AGDQ2018", ymd("2018-01-07"), ymd("2018-01-14"),
+  "AGDQ2019", ymd("2019-01-06"), ymd("2019-01-13"),
+  "SGDQ2011", ymd("2011-08-04"), ymd("2011-08-06"),
+  "SGDQ2012", ymd("2012-05-24"), ymd("2012-05-28"),
+  "SGDQ2013", ymd("2013-07-25"), ymd("2013-07-30"),
+  "SGDQ2014", ymd("2014-06-22"), ymd("2014-06-28"),
+  "SGDQ2015", ymd("2015-07-26"), ymd("2015-08-02"),
+  "SGDQ2016", ymd("2016-07-03"), ymd("2016-07-09"),
+  "SGDQ2017", ymd("2017-07-02"), ymd("2017-07-09"),
+  "SGDQ2018", ymd("2018-06-24"), ymd("2018-07-01"),
+  "SGDQ2019", ymd("2019-06-23"), ymd("2018-06-30")
+
+) %>%
+  mutate(event_duration = start %--% end / ddays(1),
+         start = as.POSIXct(start),
+         end = as.POSIXct(end))
+
 # For documents ----
 library(ggplot2)
 library(scales)
@@ -124,10 +152,10 @@ library(hrbrthemes)
 library(knitr)
 library(ggbeeswarm)
 library(effects)
-theme_set(theme_ipsum() + theme(legend.position = "top"))
+theme_set(theme_ipsum_rc() + theme(legend.position = "top"))
 
 ## Plot parts
-euro_scale <- unit_format("€", sep = "")
+euro_scale <- unit_format(suffix = "€", sep = "")
 euro_axis <- function(...) dup_axis(~.*.85, labels = euro_scale, name = NULL, ...)
 
 p_title <- "Games Done Quick: Donation Breakdown"

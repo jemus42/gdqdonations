@@ -7,7 +7,15 @@ output: html_document
 ```{r setup, include=FALSE}
 source("helpers.R")
 
-gdq <- assemble_gdqs()
+gdq <- left_join(
+  assemble_gdqs(),
+  event_dates,
+  by = "event"
+) %>%
+  group_by(event) %>%
+  mutate(time_rel = start %--% time / dhours(1) / (event_duration * 24))
+
+
 runs <- assemble_runs()
 
 gdq_total <- gdq %>%
