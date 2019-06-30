@@ -1,49 +1,52 @@
 # Data acquisition
-
+library(cliapp)
 source("helpers.R")
 
-events <- rev(paste0(c("a", "s"), rep(paste0("gdq", 2011:2018), each = 2)))
-events <- c("agdq2019", events)
+events <- rev(tolower(event_dates$event))
 
 # Donations ----
+# prg <- cli_progress_bar(total = length(events))
+cli_h1("Getting donations...")
 
-for (event in events) {
+walk(events, ~{
+  # prg$tick()
+  out_file <- file.path("data", paste0("donations_", .x, ".rds"))
 
-  if (file.exists(paste0("data/", event, ".rds"))) {
-    cat("Skipping: ", event, "\n")
-    next
+  if (file.exists(out_file) &
+      Sys.Date() > event_dates$end[tolower(event_dates$event) == .x]) {
+    return(tibble())
   }
 
-  print(event)
-  get_donations(event = event)
-  beepr::beep()
-}
+  dntns <- get_donations(event = .x)
+  saveRDS(object = dntns, file = out_file)
 
-gdq <- left_join(
-  assemble_gdqs(),
-  event_dates,
-  by = "event"
-) %>%
-  group_by(event) %>%
-  mutate(time_rel = start %--% time / dhours(1) / (event_duration * 24))
+  beepr::beep(2)
+})
+cli_alert_success("Got donations!")
 
-saveRDS(gdq, "data/gdq.rds")
+# Cache assembled donations dataset
+all_donations <- assemble_donations()
+saveRDS(all_donations, "data/all_donations.rds")
 
 # Runs ----
+prg <- cli_progress_bar(total = length(events))
+cli_h1("Getting runs...")
 
-for (event in events) {
+walk(events, ~{
+  prg$tick()
 
-  path <- paste0("data/runs_", event, ".rds")
+  out_file <- paste0("data/runs_", event, ".rds")
 
-  if (file.exists(path) | event == "agdq2011") {
-    cat("Skipping: ", event, "\n")
-    next
+  if (file.exists(out_file) | event == "agdq2011") {
+    return(tibble())
   }
 
-  print(event)
   get_runs(event = event) %>%
-  saveRDS(path)
+    saveRDS(out_file)
+})
 
-  beepr::beep()
-}
+cli_alert_success("Got runs!")
 
+# Cache assembled runs dataset
+all_runs <- assemble_runs()
+saveRDS(all_runs, "data/all_runs.rds")

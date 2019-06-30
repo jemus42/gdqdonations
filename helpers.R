@@ -5,10 +5,13 @@ library(magrittr)
 library(lubridate)
 library(stringr)
 library(forcats)
+library(cliapp)
+library(glue)
+library(rvest)
 
-get_page_count <- function(event = "sgdq2018") {
-  require(rvest)
-  cat("\n", event, ": Index\n", sep = "")
+# Donations ----
+get_page_count <- function(event = "sgdq2019") {
+
   url_base <- "https://gamesdonequick.com/tracker/donations/"
   url <- paste0(url_base, event)
 
@@ -19,67 +22,77 @@ get_page_count <- function(event = "sgdq2018") {
     as.numeric()
 }
 
-get_page <- function(event = "sgdq2018", page = 1) {
-  require(rvest)
-  cat("\n", event, ": ", page, "\n", sep = "")
+get_donation_page <- function(event = "sgdq2019", page = 1) {
+
   url_base <- "https://gamesdonequick.com/tracker/donations/"
   url <- paste0(url_base, event, "?page=", page)
 
-  cat("\n", url, "\n")
+  # cliapp::cli_text(event, ": ", url)
+
   read_html(url) %>%
     html_table() %>%
     extract2(1) %>%
     set_names(c("name", "time", "amount", "comment")) %>%
     mutate(time = mdy_hms(time),
-           amount_lbl = amount,
+           #amount_lbl = amount,
            amount = stringr::str_remove(amount, "\\$"),
            amount = stringr::str_remove(amount, ","),
-           amount = as.numeric(amount))
+           amount = as.numeric(amount)) %>%
+    as_tibble()
 }
 
 get_donations <- function(event = "sgdq2018") {
-
   pages <- seq_len(get_page_count(event = event))
 
-  donations <- map_df(pages, function(page) {
-    get_page(event = event, page = page)
+  #cli_h2("Getting donations for {event}")
+  prg <- cli_progress_bar(
+    format = glue::glue("{event}: [:bar] :percent (:elapsedfull)"),
+    total = length(pages),
+    clear = TRUE,
+    current = emo::ji("moneybag"))
+
+  map_df(pages, function(page) {
+    Sys.sleep(.5)
+    prg$tick()
+    get_donation_page(event = event, page = page)
   })
-
-  donations <- donations %>%
-    #filter(time > ymd_hms("2018-06-24 00:00:00")) %>%
-    arrange(time) %>%
-    mutate(day = wday(time, label = TRUE),
-           day_num = paste0(day, " (", day(time), ".)"))
-
-  amount_breaks   <- sort(c(0, as.numeric(flatten(map(c(5, 10, 25), ~.x * 10^{0:4})))))
-  amount_c_labels <- paste0("<= ", scales::dollar(amount_breaks[-1]))
-
-  donations <- donations %>%
-    mutate(amount_c = cut(amount, breaks = amount_breaks, labels = amount_c_labels))
-
-  cat("\nSaving", event, "\n")
-  saveRDS(donations, file.path("data", paste0(event, ".rds")))
 }
 
-
-assemble_gdqs <- function(events = NULL) {
+assemble_donations <- function(events = NULL) {
 
   if (is.null(events)) {
     # events <- rev(paste0(c("a", "s"), rep(paste0("gdq", 2011:2018), each = 2)))
     # events <- paste0("data/", events, ".rds")
-    events <- list.files("data", "^[as]gdq\\d+\\.rds", full.names = TRUE)
+    events <- list.files("data", "donations_[as]gdq\\d+\\.rds", full.names = TRUE)
   }
 
-  map_df(events, function(x) {
-    df <- readRDS(x)
-    df$day_num <- as.character(df$day_num)
-    df$event <- str_to_upper(str_extract(x, "[as]gdq\\d+"))
-    df$year  <- str_extract(x, "\\d+")
-    df$gdq   <- str_remove(df$event, "\\d+")
-    df
+  donations <- map_df(events, ~{
+    readRDS(.x) %>%
+      mutate(event = str_extract(.x, "[as]gdq\\d{4}") %>% str_to_upper()) %>%
+      as_tibble()
   }) %>%
     arrange(time) %>%
-    mutate(day_num = forcats::fct_inorder(day_num, ordered = TRUE))
+    #mutate(day_num = forcats::fct_inorder(day_num, ordered = TRUE)) %>%
+    left_join(
+      event_dates,
+      by = "event"
+    ) %>%
+      group_by(event) %>%
+      mutate(time_rel = start %--% time / dhours(1) / (event_duration * 24))
+
+  donations <- donations %>%
+    arrange(time) %>%
+    mutate(day = wday(time, label = TRUE),
+           day_num = paste0(day, " (", day(time), ".)"))
+
+  amount_breaks <- map(c(5, 10, 25), ~.x * 10^{0:4}) %>%
+    flatten_dbl() %>%
+    sort() %>%
+    c(0, .)
+
+  amount_c_labels <- paste0("<= ", scales::dollar(amount_breaks[-1]))
+  donations %>%
+    mutate(amount_c = cut(amount, breaks = amount_breaks, labels = amount_c_labels))
 }
 
 # Getting runs ----
@@ -94,15 +107,12 @@ get_runs <- function(event) {
     mutate(run_start = mdy_hms(run_start),
            run_end = mdy_hms(run_end),
            run_duration_s = as.numeric(difftime(run_end, run_start, units = "secs")),
-           run_duration_hms = hms::hms(seconds = run_duration_s)) %>%
+           run_duration_hms = hms::hms(seconds = run_duration_s),
+           event = str_to_upper(str_extract(event, "[as]gdq\\d+")),
+           year = str_extract(event, "\\d+"),
+           gdq = str_remove(runs$event, "\\d+")) %>%
     arrange(run_start) %>%
-    filter(!(run %in% c("Bonus Stream", "Preshow")))
-
-  runs$event <- str_to_upper(str_extract(event, "[as]gdq\\d+"))
-  runs$year  <- str_extract(event, "\\d+")
-  runs$gdq   <- str_remove(runs$event, "\\d+")
-
-  runs
+    as_tibble()
 }
 
 assemble_runs <- function(events = NULL) {
@@ -114,7 +124,8 @@ assemble_runs <- function(events = NULL) {
   map_df(events, function(x) {
     readRDS(x)
   }) %>%
-    arrange(run_start)
+    arrange(run_start) %>%
+    as_tibble()
 }
 
 # Proper event dates ----
@@ -138,8 +149,7 @@ event_dates <- tribble(
   "SGDQ2016", ymd("2016-07-03"), ymd("2016-07-09"),
   "SGDQ2017", ymd("2017-07-02"), ymd("2017-07-09"),
   "SGDQ2018", ymd("2018-06-24"), ymd("2018-07-01"),
-  "SGDQ2019", ymd("2019-06-23"), ymd("2018-06-30")
-
+  "SGDQ2019", ymd("2019-06-23"), ymd("2019-06-30")
 ) %>%
   mutate(event_duration = start %--% end / ddays(1),
          start = as.POSIXct(start),
@@ -151,25 +161,33 @@ library(scales)
 library(hrbrthemes)
 library(knitr)
 library(ggbeeswarm)
-library(effects)
-theme_set(theme_ipsum_rc() + theme(legend.position = "top"))
+
+theme_set(
+  theme_ipsum_rc(plot_margin = margin(10, 10, 10, 10)) +
+    theme(legend.position = "top")
+)
 
 ## Plot parts
-euro_scale <- unit_format(suffix = "€", sep = "")
+euro_scale <- unit_format(suffix = "€", sep = "", big.mark = ".", decimal.mark = ",")
 euro_axis <- function(...) dup_axis(~.*.85, labels = euro_scale, name = NULL, ...)
 
 p_title <- "Games Done Quick: Donation Breakdown"
 p_title_r <- "Games Done Quick: Runs"
 
-p_caption <- "gdq.tadaa-data.de\nAll data from gamesdonequick.com/tracker"
+p_caption <- "@jemus42 – gdq.tadaa-data.de\nAll data from gamesdonequick.com/tracker"
 
-amount_breaks   <- sort(c(0, as.numeric(flatten(map(c(5, 10, 25), ~.x * 10^{0:4})))))
+amount_breaks <- map(c(5, 10, 25), ~.x * 10^{0:4}) %>%
+  flatten_dbl() %>%
+  sort() %>%
+  c(0, .)
 amount_c_labels <- paste0("<= ", scales::dollar(amount_breaks[-1]))
 
 ## Chunk options
-knitr::opts_chunk$set(cache.path = "cache",
-                      fig.path = "plots/",
-                      fig.retina = 2,
-                      error = FALSE,
-                      warning = FALSE,
-                      message = FALSE)
+knitr::opts_chunk$set(
+  cache.path = "cache",
+  fig.path = "plots/",
+  fig.retina = 2,
+  error = FALSE,
+  warning = FALSE,
+  message = FALSE
+  )
