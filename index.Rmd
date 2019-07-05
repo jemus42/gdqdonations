@@ -10,6 +10,7 @@ editor_options:
 source("00_document_settings.R")
 
 donations <- readRDS("data/all_donations.rds")
+runs <- readRDS("data/all_runs_gdqvods.rds")
 
 donations %>%
   group_by(event) %>%
@@ -147,6 +148,88 @@ predicted %>%
   kable_styling(
     bootstrap_options = c("striped"),
     position = "center"
+  )
+```
+
+# Runs
+
+```{r runs_lengths_boxplot}
+runs %>%
+  mutate(
+    year = fct_rev(year),
+    gdq = fct_rev(gdq)
+  ) %>%
+  ggplot(aes(x = year, y = time, color = gdq, fill = gdq)) +
+  geom_boxplot(alpha = .5) +
+  stat_summary(
+    fun.y = mean, geom = "point", position = position_dodge2(width = .75),
+    shape = 21, color = "black", stroke = .5, key_glyph = "rect"
+  ) +
+  coord_flip() +
+  scale_y_time(breaks = seq(0, 10, 1) * 60^2) +
+  scale_colorfill_gdq(guide = guide_legend(reverse = TRUE)) +
+  #ggforce::facet_zoom(y = time <= hms::hms(hours = 3)) +
+  labs(
+    title = p_title_r,
+    subtitle = "Run durations by event",
+    x = "", y = "H:M:S"
+  ) +
+  theme_ipsum_fsc(grid = "Xx") +
+  theme(
+    legend.position = c(.6, 1.08),
+    legend.direction = "horizontal",
+    panel.grid.major = element_line(colour = "#aaaaaa")
+  )
+```
+
+Maybe a zoomed in version is easier to digest.
+
+```{r run_lengths_boxplot_sub3}
+runs %>%
+  filter(time <= hms::hms(hours = 2)) %>%
+  mutate(
+    year = fct_rev(year),
+    gdq = fct_rev(gdq)
+  ) %>%
+  ggplot(aes(x = year, y = time, color = gdq, fill = gdq)) +
+  geom_boxplot(alpha = .5) +
+  stat_summary(
+    fun.y = mean, geom = "point", position = position_dodge2(width = .75),
+    shape = 21, color = "black", stroke = .5, key_glyph = "rect"
+  ) +
+  coord_flip() +
+  scale_y_time(
+    breaks = seq(0, 10, .5) * 60^2,
+    minor_breaks = seq(0, 10, .25) * 60^2
+  ) +
+  scale_colorfill_gdq(guide = guide_legend(reverse = TRUE)) +
+  labs(
+    title = p_title_r,
+    subtitle = "Run durations by event: Sub 2 hour runs only",
+    x = "", y = "H:M:S"
+  ) +
+  theme_ipsum_fsc(grid = "Xx") +
+  theme(
+    legend.position = c(.6, 1.08),
+    legend.direction = "horizontal",
+    panel.grid.major = element_line(colour = "#aaaaaa")
+  )
+```
+
+Or maybe a histogram.
+
+```{r run_lengths_histogram}
+runs %>%
+  ggplot(aes(x = time, color = gdq, fill = gdq)) +
+  geom_histogram(
+    binwidth = .5 * 60^2, position = "dodge", alpha = .5
+  ) +
+  facet_wrap(~gdq) +
+  scale_colorfill_gdq(guide = FALSE) +
+  labs(
+    title = p_title_r,
+    subtitle = "Number of runs in 30min intervals across all events",
+    y = "# of runs"
   )
 ```
 
