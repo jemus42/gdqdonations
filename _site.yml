@@ -1,6 +1,6 @@
 name: GDQ Data
 output_dir: "_site"
-exclude: ["README.md"]
+exclude: ["README.md", "data"]
 navbar:
   title: GDQ Tracker Tracker
   left:

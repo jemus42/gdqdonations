@@ -2,6 +2,10 @@
 
 rmarkdown::render_site(".")
 
+if (!requireNamespace("slackr")) {
+  remotes::install_github("hrbrmstr/slackr")
+}
+
 library(slackr)
 slackr_setup(config_file = "/opt/tadaadata/.slackr")
 
