@@ -1,6 +1,7 @@
 # Data acquisition
 library(cliapp)
-source("helpers.R")
+source("00-helpers-gdqtracker.R")
+source("00-helpers-gdqvods.R")
 
 events <- rev(tolower(event_dates$event))
 
@@ -28,25 +29,35 @@ cli_alert_success("Got donations!")
 all_donations <- assemble_donations()
 saveRDS(all_donations, "data/all_donations.rds")
 
-# Runs ----
+# Runs (GDQ) ----
 prg <- cli_progress_bar(total = length(events))
-cli_h1("Getting runs...")
+cli_h1("Getting runs from GDQ tracker...")
 
 walk(events, ~{
   prg$tick()
 
-  out_file <- paste0("data/runs_", event, ".rds")
+  out_file <- paste0("data/runs_", .x, ".rds")
 
-  if (file.exists(out_file) | event == "agdq2011") {
+  if (file.exists(out_file) | .x == "agdq2011") {
     return(tibble())
   }
 
-  get_runs(event = event) %>%
+  get_runs(event = .x) %>%
     saveRDS(out_file)
 })
 
-cli_alert_success("Got runs!")
+cli_alert_success("Got runs from GDQ tracker!")
 
 # Cache assembled runs dataset
 all_runs <- assemble_runs()
-saveRDS(all_runs, "data/all_runs.rds")
+saveRDS(all_runs, "data/all_runs_gdqtracker.rds")
+
+# Saving gdqvods runs ----
+if (!file.exists("data/all_runs_gdqvods.rds")) {
+  cli_h1("Getting runs from gdqvods...")
+
+  gdqvods <- get_gdqvods_runs(event_dates)
+  saveRDS(gdqvods, "data/all_runs_gdqvods.rds")
+
+  cli_alert_success("Got & saved gdqvods runs!")
+}

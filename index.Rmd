@@ -1,147 +1,152 @@
 ---
 title: "All GDQs"
-date: "`r format(Sys.time(), '%F %T %Z')`"
+date: "Updated at `r format(Sys.time(), '%F %T %Z')`"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
-source("helpers.R")
+source("00_document_settings.R")
 
-gdq <- left_join(
-  assemble_gdqs(),
-  event_dates,
-  by = "event"
-) %>%
+donations <- readRDS("data/all_donations.rds")
+
+donations %>%
   group_by(event) %>%
-  mutate(time_rel = start %--% time / dhours(1) / (event_duration * 24))
-
-
-runs <- assemble_runs()
-
-gdq_total <- gdq %>%
-  group_by(year, gdq) %>%
-  summarize(amount = sum(amount)) %>%
-  ungroup()
+  summarize(
+    total = sum(amount),
+    avg = mean(amount)
+  ) %>%
+  mutate(
+    year = as.numeric(str_extract(event, "\\d+")),
+    gdq = str_extract(event, "[A-Z]+")
+  ) %>%
+  arrange(year) %>%
+  mutate(cumtot = cumsum(total)) -> gdq_donation_totals
 ```
 
-Since I discovered that the [GDQ donations are public, tabular und scrapeable](https://gamesdonequick.com/tracker/donations/), I couldn't resist cobbling together a script to scrape all the data. It only took around 2 hours to finish. Anway, this site collects the results.
+Since I discovered that the [GDQ donations are public, tabular und scrapeable](https://gamesdonequick.com/tracker/donations/), I couldn't resist cobbling together a script to scrape all the data.  
+Here are some results.
 
 # Donations 
 
 First up we look at the donation totals for each event.  
 Note that as of now I only collected data from [AS]GDQs since 2011, the other events are not included (yet?).
 
-```{r gdq_bars_by_event}
-ggplot(gdq_total, aes(x = year, y = amount, fill = gdq)) +
-  geom_col(position = "dodge", alpha = .75) +
-  scale_y_continuous(labels = dollar, 
-                     sec.axis = sec_axis(~.*.85, 
-                                         labels = euro_scale)) +
-  scale_fill_brewer(palette = "Set1", direction = -1) +
-  labs(title = p_title, caption = p_caption,
-       subtitle = "Donation totals by event",
-       x = "Year", y = "Amount", fill = "Event")
+```{r donations_by_event}
+gdq_donation_totals %>%
+  ggplot(aes(x = year, y = total, fill = gdq)) +
+  geom_col(position = position_dodge(), alpha = .75) +
+  scale_x_year() +
+  scale_y_currency(
+    breaks = seq(0, 3e6, 5e5),
+    minor_breaks = seq(0, 3e6, 1e5)
+  ) +
+  scale_colorfill_gdq() +
+  labs(
+    title = "Games Done Quick: Donation Totals",
+    subtitle = "Donation totals as per the official tracker page"
+  )
 ```
 
-Or cumulative, to see how much money GDQ has raised since 2011 (as I said, only the main events are counted, the actual total is even higher).
+## Relative change event to event
 
-```{r gdq_bars_cumulative_by_event}
-gdq_total %>%
-  arrange(year) %>%
-  mutate(amount = cumsum(amount)) %>%
-  ggplot(aes(x = year, y = amount, fill = gdq)) +
-  geom_col(alpha = .75) +
-  scale_y_continuous(labels = dollar, 
-                     sec.axis = sec_axis(~.*.85, 
-                                         labels = euro_scale)) +
-  scale_fill_brewer(palette = "Set1", direction = -1) +
-  labs(title = p_title, caption = p_caption,
-       subtitle = "Cumulative donation totals",
-       x = "Year", y = "Amount", fill = "Event")
-```
-
-```{r gdq_boxplot_by_event}
-gdq %>%
-  mutate(year = factor(year(time))) %>%
-  filter(name != "Twitch Subscriber Revenue",
-         name != "Humble Bundle",
-         name != "The Yetee",
-         name != "Twitch HQ",
-         name != "Fangamer",
-         name != "D..., Games (GamesDoneQuick)") %>%
-  ggplot(aes(x = year, y = amount, fill = gdq)) +
-  geom_boxplot() +
-  scale_y_log10(labels = dollar,
-                     sec.axis = dup_axis(~ . * .85,
-                                         labels = euro_scale, 
-                                         breaks = derive())) +
-  scale_fill_brewer(palette = "Set1", direction = -1) +
-  labs(title = p_title, caption = p_caption,
-       subtitle = "Donations by event, sponsor donations have been removed.",
-       x = "Year", y = "Amount", fill = "Event")
+```{r donations_relative_change}
+gdq_donation_totals %>%
+  group_by(gdq) %>%
+  mutate(gain = total - lag(total)) %>%
+  ggplot(aes(x = year, y = gain, fill = gdq)) +
+  geom_col(position = position_dodge(), alpha = .75) +
+  scale_x_year() +
+  scale_y_currency(
+    breaks = seq(-2e6, 2e6, 2e5),
+    minor_breaks = seq(-2e6, 2e6, 5e4)
+  ) +
+  facet_wrap(~gdq) +
+  scale_colorfill_gdq(guide = FALSE) +
+  labs(
+    title = "Games Done Quick: Donation Totals",
+    subtitle = "Per-GDQ donation totals: Difference from previous event"
+  )
 ```
 
 
-# Runs
+## Cumulative total
 
-Run duration histogram.
-
-```{r runs_histogram}
-runs %>%
-  filter(run_duration_s > 0) %>%
-  {
-    ggplot(data = ., aes(x = run_duration_hms)) +
-      geom_histogram(binwidth = 1/6 * 60^2) +
-      geom_vline(xintercept = mean(.$run_duration_s), color = "red", lty = "dashed") +
-      scale_x_time(breaks = seq(0, 8 * 60^2, 1 * 60^2)) +
-      labs(title = "Games Done Quick: Runs", caption = p_caption,
-           subtitle = "Run duration histogram",
-           x = "Run Duration (H:M:S)", y = "Frequency") 
-  }
+```{r donations_cumulative_by_event}
+gdq_donation_totals %>%
+  ggplot(aes(x = year, y = cumtot, fill = gdq)) +
+  geom_col(position = position_dodge(), alpha = .75) +
+  scale_x_year() +
+  scale_y_currency(
+    breaks = seq(0, 3e7, 5e6),
+    minor_breaks = seq(0, 3e7, 1e6)
+  ) +
+  scale_colorfill_gdq() +
+  labs(
+    title = "Games Done Quick: Donation Totals",
+    subtitle = "Cumulative donation totals as per the official tracker page"
+  )
 ```
 
-Or run durations by event:
+## Prediction
 
-```{r runs_by_event_boxmean}
-runs %>%
-  filter(run_duration_s > 0) %>%
-  {
-    ggplot(data = ., aes(x = factor(year), y = run_duration_hms, color = gdq, fill = gdq)) +
-      geom_boxplot(alpha = .5) +
-      stat_summary(fun.y = mean, geom = "point", shape = 21, color = "black",
-                   position = position_dodge(width = .75)) +
-      scale_y_time(breaks = seq(0, 8 * 60^2, 1 * 60^2),
-                   minor_breaks = seq(0, 8 * 60^2, 1/4 * 60^2)) +
-      scale_color_brewer(palette = "Set1", direction = -1, guide = F) +
-      scale_fill_brewer(palette = "Set1", direction = -1) +
-      labs(title = p_title_r, caption = p_caption,
-           subtitle = paste0("Run durations as boxplots with mean (dot in box).",
-                            "\nGlobal average is ",
-                            hms::as.hms(round(mean(runs$run_duration_hms)))),
-             x = "Year", y = "Run Duration (H:M:S)", fill = "Event")
-  }
+```{r donations_cumulative_model}
+gdq_donation_totals %>%
+  mutate(year = ifelse(gdq == "SGDQ", year + .5, year)) %>%
+  ggplot(aes(x = year, y = cumtot, color = gdq, fill = gdq)) +
+  geom_smooth(aes(group = 1), method = lm, formula = y ~ poly(x, 2),
+              se = FALSE, color = "black", linetype = "dashed", size = .75) +
+  geom_point(size = 2.5, key_glyph = "rect", shape = 21, color = "white") +
+  scale_x_year() +
+  scale_y_currency() +
+  scale_colorfill_gdq() +
+  labs(
+    title = "Games Done Quick: Donation Totals",
+    subtitle = "Cumulative donation totals: Quadratic model"
+  )
+
+
+mod <- lm(cumtot ~ year + I(year^2), # poly(year, 2),
+          data = gdq_donation_totals %>%
+            mutate(year = ifelse(gdq == "SGDQ", year + .5, year),
+                   cumtot = cumtot/1e6)
+)
+
+model_equations <- function(mod) {
+  coefs <- round(coef(mod), 2)
+
+  glue::glue("\\widehat{\\text{Total}} = (coefs[[1]]) + (coefs[[2]]) \\cdot \\text{Year} + (coefs[[3]]) \\cdot \\text{Year}^2", .open = "(", .close = ")")
+}
 ```
 
-## Runs and Bid Wars
+The model equation:
 
-What's the likelihood that a run is associated with a bid war, given the run's duration?
+$$`r model_equations(mod)`$$
 
-```{r runs_by_duration_bidwar_logreg}
-runs %>%
-  filter(run_duration_s > 0) %>%
-  mutate(bidwars = if_else(bidwars == "Yes", 1, 0)) %>%
-  glm(bidwars ~ run_duration_s, data = ., family = binomial) %>%
-  effects::allEffects() %>%
-  unclass() %>%
-  as.data.frame() %>%
-  as_tibble() %>%
-  mutate(duration = hms::hms(seconds = run_duration_s.run_duration_s)) %>%
-  ggplot(aes(x = duration, y = run_duration_s.fit)) +
-  geom_line() +
-  scale_x_time() +
-  scale_y_continuous(labels = percent, limits = c(0, 1)) +
-  labs(title = p_title_r, caption = p_caption,
-       subtitle = "Estimated likelihood for a run to be associated with a bid war, by duration",
-       x = "Run Duration (H:M:S)", y = "Likelihood")
+Let's make some naive predictions for the upcoming years:
+
+```{r donations_cumulative_predictions}
+current_year <- year(today())
+
+pred_df <- tibble(year = seq(current_year, current_year + 5, .5))
+predicted <- as_tibble(predict(mod, newdata = pred_df, interval = "pred")) %>%
+  mutate_all(round, 2) %>%
+  mutate(
+    fit = paste0("$", fit),
+    Year = pred_df$year,
+    ci = glue::glue("({lwr}, {upr})"),
+    GDQ = ifelse(str_detect(as.character(Year), ".5$"), "SGDQ", "AGDQ"),
+    Year = floor(Year)
+  ) %>%
+  select(GDQ, Year, fit, ci)
+
+predicted %>%
+  setNames(c("GDQ", "Year", "Predicted Total (Millions)", "CI (95% Prediction)")) %>%
+  kable(align = c("c", "c", "c", "c")) %>%
+  kable_styling(
+    bootstrap_options = c("striped"),
+    position = "center"
+  )
 ```
 
