@@ -282,9 +282,8 @@ runs %>%
   arrange(desc(player_total)) -> runners_top20
 
 runners_top20 %>%
-  ggplot(aes(
-    x = reorder(players, -player_total_rank), 
-    y = n, color = gdq, fill = gdq)) +
+  ggplot(aes(x = reorder(players, -player_total_rank), 
+             y = n, color = gdq, fill = gdq)) +
   geom_col(alpha = .75) +
   coord_flip() +
   scale_colorfill_gdq(guide = guide_legend(reverse = TRUE)) +
@@ -292,7 +291,8 @@ runners_top20 %>%
     title = p_title_runners,
     subtitle = "Top 20 runners by number of total appearances",
     x = "", y = "# of runs"
-  )
+  ) +
+  theme_gdqd(grid = "Xx")
 ```
 
 ### Run length by runner
@@ -373,7 +373,8 @@ runs_top20 %>%
     title = p_title_r,
     subtitle = "Top 20 games by number of total appearances",
     x = "", y = "# of runs"
-  )
+  ) +
+  theme_gdqd(grid = "X")
 ```
 
 ## by decade
@@ -387,7 +388,7 @@ runs %>%
   ) +
   scale_y_continuous(labels = function(x) paste0(100 * x, "%")) +
   scale_colorfill_gdq() +
-    labs(
+  labs(
     title = p_title_r,
     subtitle = "Games by decade of release",
     x = "", y = "% within event series"
