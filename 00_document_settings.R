@@ -29,6 +29,7 @@ euro_axis <- function(...) dup_axis(~.*.85, labels = euro_scale, name = NULL, ..
 
 p_title <- "Games Done Quick: Donation Breakdown"
 p_title_r <- "Games Done Quick: Runs"
+p_title_runners <- "Games Done Quick: Runners"
 
 p_caption <- glue::glue("Donation data from gamesdonequick.com/tracker, ",
                         "run data from gdqvods.com\n",

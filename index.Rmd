@@ -136,7 +136,7 @@ predicted <- as_tibble(predict(mod, newdata = pred_df, interval = "pred")) %>%
   mutate(
     fit = paste0("$", fit),
     Year = pred_df$year,
-    ci = glue::glue("({lwr}, {upr})"),
+    ci = glue::glue("(${lwr}, ${upr})"),
     GDQ = ifelse(str_detect(as.character(Year), ".5$"), "SGDQ", "AGDQ"),
     Year = floor(Year)
   ) %>%
@@ -152,6 +152,8 @@ predicted %>%
 ```
 
 # Runs
+
+## Run length by event
 
 ```{r runs_lengths_boxplot}
 runs %>%
@@ -231,5 +233,115 @@ runs %>%
     subtitle = "Number of runs in 30min intervals across all events",
     y = "# of runs"
   )
+```
+
+## Runners
+
+```{r runners_total_runs}
+runs %>%
+  separate_rows(players, sep = ", ") %>%
+  count(players, gdq, sort = TRUE) %>%
+  group_by(players) %>%
+  mutate(player_total = sum(n)) %>%
+  ungroup() %>%
+  spread(gdq, n) %>%
+  mutate(player_total_rank = min_rank(-player_total)) %>%
+  filter(player_total_rank <= 20) %>%
+  gather(gdq, n, matches("[AS]GDQ")) %>%
+  mutate(gdq = fct_rev(gdq)) %>%
+  arrange(desc(player_total)) -> runners_top20
+
+runners_top20 %>%
+  ggplot(aes(
+    x = reorder(players, -player_total_rank), 
+    y = n, color = gdq, fill = gdq)) +
+  geom_col(alpha = .75) +
+  coord_flip() +
+  scale_colorfill_gdq(guide = guide_legend(reverse = TRUE)) +
+  labs(
+    title = p_title_runners,
+    subtitle = "Top 20 runners by number of total appearances",
+    x = "", y = "# of runs"
+  )
+```
+
+### Run length by runner
+
+```{r runners_run_length}
+runs %>%
+  mutate(time_min = as.numeric(time)/60) %>%
+  separate_rows(players, sep = ", ") %>%
+  filter(players %in% runners_top20$players) %>%
+  group_by(players) %>%
+  summarize(
+    runlength_mean = mean(time_min)
+  ) %>%
+  ungroup() %>%
+  ggplot(aes(x = fct_reorder(players, -runlength_mean), y = runlength_mean)) +
+  geom_col(alpha = .75) +
+  coord_flip() +
+  labs(
+    title = p_title_runners,
+    subtitle = "Top 20 frequent runners by average run length",
+    y = "Average run duration (min)", x = ""
+  ) +
+  theme_ipsum_fsc(grid = "Xx")
+```
+
+## Games
+
+```{r games_total}
+runs %>%
+  count(run, gdq, sort = TRUE) %>%
+  group_by(run) %>%
+  mutate(run_total = sum(n)) %>%
+  ungroup() %>%
+  spread(gdq, n) %>%
+  mutate(run_total_rank = min_rank(-run_total)) %>%
+  filter(run_total_rank <= 20) %>%
+  gather(gdq, n, matches("[AS]GDQ")) %>%
+  mutate(gdq = fct_rev(gdq)) %>%
+  arrange(desc(run_total)) -> runs_top20
+
+runs_top20 %>%
+  ggplot(aes(x = reorder(run, -run_total_rank), 
+             y = n, color = gdq, fill = gdq)) +
+  geom_col(alpha = .75) +
+  coord_flip() +
+  scale_colorfill_gdq(guide = guide_legend(reverse = TRUE)) +
+  labs(
+    title = p_title_r,
+    subtitle = "Top 20 games by number of total appearances",
+    x = "", y = "# of runs"
+  )
+```
+
+## by decade
+
+```{r games_decade}
+runs %>%
+  ggplot(aes(x = game_decade, color = gdq, fill = gdq)) +
+  geom_bar(
+    aes(y = stat(prop), group = gdq),
+    alpha = .75, position = position_dodge2(preserve = "single")
+  ) +
+  scale_y_continuous(labels = function(x) paste0(100 * x, "%")) +
+  scale_colorfill_gdq() +
+    labs(
+    title = p_title_r,
+    subtitle = "Games by decade of release",
+    x = "", y = "% within event series"
+  ) 
+```
+
+The oldest and newest games:
+
+```{r games_oldestnewest}
+runs %>%
+  filter(game_year %in% c(min(game_year), max(game_year))) %>%
+  select(run, platform, players, time, event) %>%
+  rename_all(~str_to_title(.x)) %>%
+  kable() %>%
+  kable_styling()
 ```
 

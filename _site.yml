@@ -10,14 +10,7 @@ navbar:
   - text: Single Events
     icon: fa-gamepad
     menu:
-      - text: SGDQ 2018
-        href: sgdq2018.html
-      - text: AGDQ 2019
-        href: agdq2019.html
   right:
-  - text: ''
-    icon: fa-code
-    href: session.html
   - text: ''
     icon: fa-twitter
     href: https://twitter.com/jemus42
