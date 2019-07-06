@@ -12,15 +12,20 @@ library(stringr)
 library(lubridate)
 library(forcats)
 
-theme_set(
+theme_gdqd <- function(grid = "Yy", legend.position = "top", ...) {
   theme_ipsum_fsc(
-    grid = "Yy",
-    plot_margin = margin(5, 5, 5, 5),
+    grid = grid,
+    plot_margin = margin(5, 5, 5, 5)
   ) +
     theme(
-      legend.position = "top",
-      panel.grid.major = element_line(colour = "#aaaaaa")
+      legend.position = legend.position,
+      panel.grid.major = element_line(colour = "#aaaaaa"),
+      ...
     )
+}
+
+theme_set(
+ theme_gdqd()
 )
 
 ## Plot parts ----

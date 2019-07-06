@@ -151,3 +151,5 @@ event_dates <- tribble(
   "SGDQ2019", ymd("2019-06-23", tz = "UTC"), ymd("2019-06-30", tz = "UTC")
 ) %>%
   mutate(event_duration = start %--% end / ddays(1))
+
+saveRDS(event_dates, "data/event_dates.rds")

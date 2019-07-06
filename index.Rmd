@@ -9,6 +9,7 @@ editor_options:
 ```{r setup, include=FALSE}
 source("00_document_settings.R")
 
+event_dates <- readRDS("data/event_dates.rds")
 donations <- readRDS("data/all_donations.rds")
 runs <- readRDS("data/all_runs_gdqvods.rds")
 
@@ -153,6 +154,37 @@ predicted %>%
 
 # Runs
 
+## Number of runs
+
+```{r runs_n} 
+runs %>%
+  count(event, gdq, year) %>%
+  mutate(year = as.numeric(year)) %>%
+  left_join(event_dates, by = "event") %>%
+  ggplot(aes(x = year, y = n, color = gdq, fill = gdq)) +
+  geom_col(position = "dodge", alpha = 0.75) +
+  scale_x_year() +
+  scale_colorfill_gdq() +
+  minilabs(
+    title = p_title_r,
+    subtitle = "Number of runs per event"
+  )
+
+runs %>%
+  count(event, gdq, year) %>%
+  mutate(year = as.numeric(year)) %>%
+  left_join(event_dates, by = "event") %>%
+  ggplot(aes(x = year, y = n/event_duration, color = gdq, fill = gdq)) +
+  geom_col(position = "dodge", alpha = 0.75) +
+  scale_x_year() +
+  scale_colorfill_gdq() +
+  minilabs(
+    title = p_title_r,
+    subtitle = "Runs per day (approximate)"
+  )
+```
+
+
 ## Run length by event
 
 ```{r runs_lengths_boxplot}
@@ -176,11 +208,10 @@ runs %>%
     subtitle = "Run durations by event",
     x = "", y = "H:M:S"
   ) +
-  theme_ipsum_fsc(grid = "Xx") +
-  theme(
+  theme_gdqd(
+    grid = "Xx",
     legend.position = c(.6, 1.08),
     legend.direction = "horizontal",
-    panel.grid.major = element_line(colour = "#aaaaaa")
   )
 ```
 
@@ -210,11 +241,10 @@ runs %>%
     subtitle = "Run durations by event: Sub 2 hour runs only",
     x = "", y = "H:M:S"
   ) +
-  theme_ipsum_fsc(grid = "Xx") +
-  theme(
+  theme_gdqd(
+    grid = "Xx",
     legend.position = c(.6, 1.08),
     legend.direction = "horizontal",
-    panel.grid.major = element_line(colour = "#aaaaaa")
   )
 ```
 
@@ -285,8 +315,38 @@ runs %>%
     subtitle = "Top 20 frequent runners by average run length",
     y = "Average run duration (min)", x = ""
   ) +
-  theme_ipsum_fsc(grid = "Xx")
+  theme_gdqd(grid = "Xx")
 ```
+
+## Who ran the last game
+
+```{r runners_last_game}
+runs %>%
+  group_by(event) %>%
+  mutate(run_index = seq_along(run)) %>%
+  filter(run_index == last(run_index)) %>%
+  ungroup() %>%
+  separate_rows(players, sep = ", ") %>%
+  count(gdq, players, sort = TRUE) %>%
+  spread(gdq, n) %>%
+  mutate_all(~ifelse(is.na(.x), 0, .x)) %>%
+  mutate(
+    total = AGDQ + SGDQ,
+    rank = min_rank(-total)
+  ) %>%
+  gather(gdq, n, AGDQ, SGDQ) %>%
+  ggplot(aes(x = reorder(players, -rank), y = n, color = gdq, fill = gdq)) +
+  geom_col(alpha = .75) +
+  coord_flip() +
+  scale_y_continuous(breaks = seq(0, 100, 1)) +
+  scale_colorfill_gdq() +
+  minilabs(
+    title = p_title_runners,
+    subtitle = "Who ran the last game of the event, how often"
+  ) +
+  theme_gdqd(grid = "X")
+```
+
 
 ## Games
 
