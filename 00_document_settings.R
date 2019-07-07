@@ -29,8 +29,11 @@ theme_set(
 )
 
 ## Plot parts ----
-euro_scale <- unit_format(suffix = "€", sep = "", big.mark = ".", decimal.mark = ",")
-euro_axis <- function(...) dup_axis(~.*.85, labels = euro_scale, name = NULL, ...)
+euro_scale <- unit_format(
+  suffix = "€", sep = "", big.mark = ".",
+  decimal.mark = ",", accuracy = 4
+)
+euro_axis <- function(...) dup_axis(~.*.89, labels = euro_scale, name = NULL, ...)
 
 p_title <- "Games Done Quick: Donation Breakdown"
 p_title_r <- "Games Done Quick: Runs"
@@ -62,6 +65,18 @@ scale_y_currency <- partial(
   scale_y_continuous,
   labels = dollar_format(),
   sec.axis = euro_axis(),
+  name = ""
+)
+
+scale_y_dollar <- partial(
+  scale_y_continuous,
+  labels = dollar_format(),
+  name = ""
+)
+
+scale_x_dollar <- partial(
+  scale_x_continuous,
+  labels = dollar_format(),
   name = ""
 )
 

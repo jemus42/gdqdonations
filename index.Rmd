@@ -72,7 +72,6 @@ gdq_donation_totals %>%
   )
 ```
 
-
 ## Cumulative total
 
 ```{r donations_cumulative_by_event}
@@ -91,7 +90,7 @@ gdq_donation_totals %>%
   )
 ```
 
-## Prediction
+### Prediction
 
 ```{r donations_cumulative_model}
 gdq_donation_totals %>%
@@ -151,6 +150,47 @@ predicted %>%
     position = "center"
   )
 ```
+
+## Donation amounts
+
+Can you tell when they started to have a $5 minimum? Turns out there were a lot of 1 cent donations, which seems kind of... inefficient? So yeah, makes sense.
+
+```{r donations_amounts_boxplots}
+all_donations %>%
+  ggplot(aes(x = year, y = amount, color = gdq, fill = gdq)) +
+  geom_boxplot(alpha = .75) +
+  stat_summary(
+    fun.y = "mean", geom = "point", shape = 21, size = 2, 
+    stroke = .6, color = "black",
+    position = position_dodge(width = .75)
+  ) +
+  scale_y_dollar(trans = "log10") +
+  scale_colorfill_gdq() +
+  minilabs(
+    title = p_title,
+    subtitle = "Individual donations by event",
+  )
+```
+
+```{r donation_amounts_histogram}
+all_donations %>%
+  mutate(
+    amount_c = cut(
+      amount, breaks = 10^(-2:6), include.lowest = TRUE, 
+      labels = paste0("<=", 10^(-1:6)))
+  ) %>% 
+  ggplot(aes(x = amount_c, color = gdq, fill = gdq)) +
+  geom_bar(alpha = .75) +
+  facet_wrap(~gdq, ncol = 1) +
+  scale_y_comma() +
+  scale_colorfill_gdq() +
+  labs(
+    title = p_title,
+    subtitle = "Individual donations by event",
+    x = "Donation range", y = "# of donations"
+  )
+```
+
 
 # Runs
 
@@ -265,7 +305,7 @@ runs %>%
   )
 ```
 
-## Runners
+# Runners
 
 ```{r runners_total_runs}
 runs %>%
@@ -295,7 +335,7 @@ runners_top20 %>%
   theme_gdqd(grid = "Xx")
 ```
 
-### Run length by runner
+## Run length by runner
 
 ```{r runners_run_length}
 runs %>%
@@ -348,7 +388,7 @@ runs %>%
 ```
 
 
-## Games
+# Games
 
 ```{r games_total}
 runs %>%
