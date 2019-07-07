@@ -191,6 +191,34 @@ donations %>%
   )
 ```
 
+## Donation Comments
+
+There was a huge difference in the proportion of donations with and without comments between AGDQ and SGDQ, but that has normalized in 2014-2015. For some reason, that ratio has also consistently decreased in both event series, meaning that there's a trend towards an equal amount of comment to no-comment donations.
+
+```{r donations_comments_prop_trend}
+donations %>%
+  ungroup() %>%
+  count(gdq, year, comment) %>%
+  spread(comment, n) %>%
+  mutate(
+    ratio = Yes/No,
+    prop_no = No / (Yes + No),
+    year = as.numeric(year),
+    year = ifelse(gdq == "SGDQ", year + 0.5, year)
+  ) %>%
+  ggplot(aes(x = year, y = ratio, color = gdq, fill = gdq)) +
+  geom_point(size = 4, key_glyph = "rect", color = "black", stroke = .25, shape = 21) +
+  geom_hline(yintercept = 1, color = "black", linetype = "dashed") +
+  scale_x_year() +
+  scale_y_continuous(breaks = seq(0, 10, 1), limits = c(0, NA)) +
+  scale_colorfill_gdq() +
+  labs(
+    title = p_title,
+    subtitle = "Ratio of number of donations with comment to those without comment",
+    x = "", y = "Ratio (> 1: More donations with comment)"
+  )
+```
+
 
 # Runs
 
