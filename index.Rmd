@@ -156,7 +156,7 @@ predicted %>%
 Can you tell when they started to have a $5 minimum? Turns out there were a lot of 1 cent donations, which seems kind of... inefficient? So yeah, makes sense.
 
 ```{r donations_amounts_boxplots}
-all_donations %>%
+donations %>%
   ggplot(aes(x = year, y = amount, color = gdq, fill = gdq)) +
   geom_boxplot(alpha = .75) +
   stat_summary(
@@ -173,7 +173,7 @@ all_donations %>%
 ```
 
 ```{r donation_amounts_histogram}
-all_donations %>%
+donations %>%
   mutate(
     amount_c = cut(
       amount, breaks = 10^(-2:6), include.lowest = TRUE, 
