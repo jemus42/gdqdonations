@@ -63,7 +63,7 @@ assemble_donations <- function(events = NULL) {
     events <- list.files("data", "donations_[as]gdq\\d+\\.rds", full.names = TRUE)
   }
 
-  amount_breaks <- map(c(5, 10, 25), ~.x * 10^{0:4}) %>%
+  amount_breaks <- map(c(5, 10, 25), ~.x * 10^{0:5}) %>%
     flatten_dbl() %>%
     sort() %>%
     c(0, .)

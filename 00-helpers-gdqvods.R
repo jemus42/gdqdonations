@@ -59,7 +59,7 @@ get_gdqvods_runs <- function(event_dates) {
         platform = Platform,
         category = Category,
         players = Runners,
-        time = hms::as.hms(Time),
+        run_time = hms::as.hms(Time),
         run_start = paste(str_extract(event, "\\d{4}"), run_start, tz_offset),
         run_start = parse_date_time(run_start, orders = "Y a, b d I:M p z"),
         run_start = with_tz(run_start, tzone = "UTC"),
@@ -72,21 +72,84 @@ get_gdqvods_runs <- function(event_dates) {
 }
 
 # Get all GDQ event names + url partials ----
-get_gdq_events <- function() {
+# Turns out it works for other subpages
+get_gdqvods_subpage <- function(page = c("event", "category", "genre")) {
   require(rvest)
+  require(stringr)
+  page <- match.arg(page)
 
-  eventpage <- read_html("http://gdqvods.com/event/")
+  eventpage <- read_html(paste0("http://gdqvods.com/", page))
 
   eventnames <- eventpage %>%
     html_nodes(".content .header") %>%
-    html_text()
+    html_text() %>%
+    str_subset("^All", negate = TRUE)
 
   urlpartials <- eventpage %>%
     html_nodes(".ui .card") %>%
     html_attr("href") %>%
-    str_remove("/event/") %>%
-    str_remove("/")
+    str_remove(paste0("/", page, "/")) %>%
+    str_remove("/") %>%
+    str_subset(pattern = "^all", negate = TRUE)
 
   names(urlpartials) <- eventnames
   urlpartials
+}
+
+# gdqvods categories ----
+get_gdqvods_by_category <- function() {
+  urls <- get_gdqvods_subpage(page = "category")
+  prg <- cli_progress_bar(total = length(urls))
+
+  map_dfr(urls, ~{
+    url <- paste0("https://gdqvods.com/category/", .x)
+
+    prg$tick()
+
+    read_html(url) %>%
+      html_node(".table") %>%
+      html_table() %>%
+      as_tibble() %>%
+      transmute(
+        event = str_to_upper(str_remove(Event, " ")),
+        run = Game,
+        platform = Platform,
+        category = Category,
+        players = Runners,
+        run_time = hms::as.hms(Time),
+        gdq = str_extract(event, "[A-Z]{4}"),
+        year = str_extract(event, "\\d{4}"),
+        game_year = str_extract(run, "\\(\\d{4}\\)$") %>% str_extract("\\d+") %>% as.numeric(),
+        game_decade = as.character((game_year %/% 10) * 10)
+      )
+  }, .id = "subcategory")
+}
+
+# gdqvods genres ----
+get_gdqvods_by_genre <- function() {
+  urls <- get_gdqvods_subpage(page = "genre")
+  prg <- cli_progress_bar(total = length(urls))
+
+  map_dfr(urls, ~{
+    url <- paste0("https://gdqvods.com/genre/", .x)
+
+    prg$tick()
+
+    read_html(url) %>%
+      html_node(".table") %>%
+      html_table() %>%
+      as_tibble() %>%
+      transmute(
+        event = str_to_upper(str_remove(Event, " ")),
+        run = Game,
+        platform = Platform,
+        category = Category,
+        players = Runners,
+        run_time = hms::as.hms(Time),
+        gdq = str_extract(event, "[A-Z]{4}"),
+        year = str_extract(event, "\\d{4}"),
+        game_year = str_extract(run, "\\(\\d{4}\\)$") %>% str_extract("\\d+") %>% as.numeric(),
+        game_decade = as.character((game_year %/% 10) * 10)
+      )
+  }, .id = "genre")
 }

@@ -61,3 +61,17 @@ if (!file.exists("data/all_runs_gdqvods.rds")) {
 
   cli_alert_success("Got & saved gdqvods runs!")
 }
+
+if (!file.exists("data/gdqvods_genres.rds")) {
+  cli_h1("Getting run genres from gdqvods...")
+
+  genres <- get_gdqvods_by_genre()
+  saveRDS(genres, "data/gdqvods_genres.rds")
+}
+
+if (!file.exists("data/gdqvods_categories.rds")) {
+  cli_h1("Getting runcategories from gdqvods...")
+
+  categories <- get_gdqvods_by_category()
+  saveRDS(categories, "data/gdqvods_categories.rds")
+}
