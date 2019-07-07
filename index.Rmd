@@ -233,7 +233,7 @@ runs %>%
     year = fct_rev(year),
     gdq = fct_rev(gdq)
   ) %>%
-  ggplot(aes(x = year, y = time, color = gdq, fill = gdq)) +
+  ggplot(aes(x = year, y = run_time, color = gdq, fill = gdq)) +
   geom_boxplot(alpha = .5) +
   stat_summary(
     fun.y = mean, geom = "point", position = position_dodge2(width = .75),
@@ -259,12 +259,12 @@ Maybe a zoomed in version is easier to digest.
 
 ```{r run_lengths_boxplot_sub3}
 runs %>%
-  filter(time <= hms::hms(hours = 2)) %>%
+  filter(run_time <= hms::hms(hours = 2)) %>%
   mutate(
     year = fct_rev(year),
     gdq = fct_rev(gdq)
   ) %>%
-  ggplot(aes(x = year, y = time, color = gdq, fill = gdq)) +
+  ggplot(aes(x = year, y = run_time, color = gdq, fill = gdq)) +
   geom_boxplot(alpha = .5) +
   stat_summary(
     fun.y = mean, geom = "point", position = position_dodge2(width = .75),
@@ -292,7 +292,7 @@ Or maybe a histogram.
 
 ```{r run_lengths_histogram}
 runs %>%
-  ggplot(aes(x = time, color = gdq, fill = gdq)) +
+  ggplot(aes(x = run_time, color = gdq, fill = gdq)) +
   geom_histogram(
     binwidth = .5 * 60^2, position = "dodge", alpha = .5
   ) +
@@ -339,7 +339,7 @@ runners_top20 %>%
 
 ```{r runners_run_length}
 runs %>%
-  mutate(time_min = as.numeric(time)/60) %>%
+  mutate(time_min = as.numeric(run_time)/60) %>%
   separate_rows(players, sep = ", ") %>%
   filter(players %in% runners_top20$players) %>%
   group_by(players) %>%
@@ -440,7 +440,7 @@ The oldest and newest games:
 ```{r games_oldestnewest}
 runs %>%
   filter(game_year %in% c(min(game_year), max(game_year))) %>%
-  select(run, platform, players, time, event) %>%
+  select(run, platform, players, run_time, event) %>%
   rename_all(~str_to_title(.x)) %>%
   kable() %>%
   kable_styling()
