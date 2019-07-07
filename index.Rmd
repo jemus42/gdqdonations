@@ -168,7 +168,7 @@ donations %>%
   scale_colorfill_gdq() +
   minilabs(
     title = p_title,
-    subtitle = "Individual donations by event",
+    subtitle = "Individual donations by event"
   )
 ```
 
