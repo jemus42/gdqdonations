@@ -11,6 +11,9 @@ cli_h1("Getting donations...")
 
 walk(events, ~{
   # prg$tick()
+
+  cli_h2("Current event: {toupper(.x)}")
+
   out_file <- file.path("data", paste0("donations_", .x, ".rds"))
 
   if (file.exists(out_file) &
@@ -56,22 +59,22 @@ saveRDS(all_runs, "data/all_runs_gdqtracker.rds")
 if (!file.exists("data/all_runs_gdqvods.rds")) {
   cli_h1("Getting runs from gdqvods...")
 
-  gdqvods <- get_gdqvods_runs(event_dates)
-  saveRDS(gdqvods, "data/all_runs_gdqvods.rds")
+  gdqvods <- get_gdqvods_runs(event_dates$event)
+  saveRDS(gdqvods, "data//gdqvods.com/gdqvods_runs.rds")
 
   cli_alert_success("Got & saved gdqvods runs!")
 }
 
-if (!file.exists("data/gdqvods_genres.rds")) {
+if (!file.exists("data/gdqvods.com/gdqvods_genres.rds")) {
   cli_h1("Getting run genres from gdqvods...")
 
   genres <- get_gdqvods_by_genre()
-  saveRDS(genres, "data/gdqvods_genres.rds")
+  saveRDS(genres, "data/gdqvods.com/gdqvods_genres.rds")
 }
 
-if (!file.exists("data/gdqvods_categories.rds")) {
-  cli_h1("Getting runcategories from gdqvods...")
+if (!file.exists("data/gdqvods.com/gdqvods_categories.rds")) {
+  cli_h1("Getting run categories from gdqvods...")
 
   categories <- get_gdqvods_by_category()
-  saveRDS(categories, "data/gdqvods_categories.rds")
+  saveRDS(categories, "data/gdqvods.com/gdqvods_categories.rds")
 }
