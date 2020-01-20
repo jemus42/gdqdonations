@@ -39,7 +39,7 @@ get_donation_page <- function(event = "sgdq2019", page = 1) {
     as_tibble()
 }
 
-get_donations <- function(event = "sgdq2018") {
+get_donations <- function(event = "agdq2020") {
   pages <- seq_len(get_page_count(event = event))
 
   #cli_h2("Getting donations for {event}")
@@ -51,7 +51,7 @@ get_donations <- function(event = "sgdq2018") {
   )
 
   map_df(pages, function(page) {
-    Sys.sleep(.5)
+    Sys.sleep(1)
     prg$tick()
     get_donation_page(event = event, page = page)
   })
@@ -97,9 +97,9 @@ assemble_donations <- function(events = NULL) {
 get_runs <- function(event) {
   require(rvest)
 
-  runs <- read_html(paste0("https://gamesdonequick.com/tracker/runs/", event)) %>%
+  read_html(paste0("https://gamesdonequick.com/tracker/runs/", event)) %>%
     html_table() %>%
-    magritrr::extract2(1) %>%
+    magrittr::extract2(1) %>%
     set_names(c("run", "players", "description", "run_start", "run_end", "bidwars")) %>%
     mutate(
       run_start = mdy_hms(run_start),
@@ -108,7 +108,7 @@ get_runs <- function(event) {
       run_duration_hms = hms::hms(seconds = run_duration_s),
       event = str_to_upper(str_extract(event, "[as]gdq\\d+")),
       year = str_extract(event, "\\d+"),
-      gdq = str_remove(runs$event, "\\d+")
+      gdq = str_remove(event, "\\d+")
     ) %>%
     arrange(run_start) %>%
     as_tibble()
@@ -139,7 +139,8 @@ event_dates <- tribble(
   "AGDQ2016", ymd("2016-01-03", tz = "UTC"), ymd("2016-01-10", tz = "UTC"),
   "AGDQ2017", ymd("2017-01-08", tz = "UTC"), ymd("2017-01-15", tz = "UTC"),
   "AGDQ2018", ymd("2018-01-07", tz = "UTC"), ymd("2018-01-14", tz = "UTC"),
-  "AGDQ2019", ymd("2019-01-06", tz = "UTC"), ymd("2019-01-13", tz = "UTC"),
+  "AGDQ2019", ymd("2019-01-06", tz = "UTC"), ymd("2019-01-12", tz = "UTC"),
+  "AGDQ2020", ymd("2020-01-05", tz = "UTC"), ymd("2020-01-12", tz = "UTC"),
   "SGDQ2011", ymd("2011-08-04", tz = "UTC"), ymd("2011-08-06", tz = "UTC"),
   "SGDQ2012", ymd("2012-05-24", tz = "UTC"), ymd("2012-05-28", tz = "UTC"),
   "SGDQ2013", ymd("2013-07-25", tz = "UTC"), ymd("2013-07-30", tz = "UTC"),
