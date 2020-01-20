@@ -60,7 +60,11 @@ get_donations <- function(event = "agdq2020") {
 assemble_donations <- function(events = NULL) {
 
   if (is.null(events)) {
-    events <- list.files("data", "donations_[as]gdq\\d+\\.rds", full.names = TRUE)
+    events <- list.files(
+      "data/gamesdonequick.com/donations/",
+      "donations_[as]gdq\\d+\\.rds",
+      full.names = TRUE
+    )
   }
 
   amount_breaks <- map(c(5, 10, 25), ~.x * 10^{0:5}) %>%
@@ -117,7 +121,11 @@ get_runs <- function(event) {
 assemble_runs <- function(events = NULL) {
 
   if (is.null(events)) {
-    events <- list.files("data", "runs_[as]gdq\\d+\\.rds", full.names = TRUE)
+    events <- list.files(
+      "data/gamesdonequick.com/runs",
+      "runs_[as]gdq\\d+\\.rds",
+      full.names = TRUE
+    )
   }
 
   map_df(events, function(x) {

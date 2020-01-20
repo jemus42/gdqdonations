@@ -11,7 +11,7 @@ source("00_document_settings.R")
 
 event_dates <- readRDS("data/event_dates.rds")
 donations <- readRDS("data/all_donations.rds")
-runs <- readRDS("data/all_runs_gdqvods.rds")
+runs <- readRDS("data/gdqvods.com/gdqvods_runs.rds")
 
 donations %>%
   group_by(event) %>%
